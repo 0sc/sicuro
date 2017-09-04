@@ -14,9 +14,9 @@ chmod 600 /root/.ssh/* &&\
 echo 
 
 echo "<h3>Checkout source code</h3>"
-git clone -b ${PROJECT_BRANCH} ${PROJECT_REPOSITORY_URL} ${PROJECT_REPOSITORY_NAME}
-
+git clone ${PROJECT_REPOSITORY_URL} ${PROJECT_REPOSITORY_NAME} 
 cd ${PROJECT_REPOSITORY_NAME}
+git checkout ${PROJECT_BRANCH}
 # Have rvm recheck ruby version
 cd .
 echo

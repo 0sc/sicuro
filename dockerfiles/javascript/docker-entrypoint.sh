@@ -12,10 +12,10 @@ chmod 600 /root/.ssh/* &&\
     ssh-keyscan bitbucket.com >> /root/.ssh/known_hosts
 echo 
 
-
 echo "<h3>Checkout source code</h3>"
-git clone -b ${PROJECT_BRANCH} ${PROJECT_REPOSITORY_URL} ${PROJECT_REPOSITORY_NAME} 
+git clone ${PROJECT_REPOSITORY_URL} ${PROJECT_REPOSITORY_NAME} 
 cd ${PROJECT_REPOSITORY_NAME}
+git checkout ${PROJECT_BRANCH}
 echo
 
 # check if sicuro.json is present
