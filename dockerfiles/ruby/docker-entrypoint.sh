@@ -31,7 +31,7 @@ fi
 
 echo "<h3>Dependencies</h3>"
 
-if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .dependencies.override'))  ; then
+if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .dependencies.override//false'))  ; then
     # default language dependencies
     echo Exporting RAILS_ENV
     export RAILS_ENV=test
@@ -46,7 +46,7 @@ if $SICURO_CONFIG_PRESENT ; then
 fi
 
 echo "<h3>Setup</h3>"
-if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .setup.override')); then
+if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .setup.override//false')); then
     # default language setup
     bundle install
     bundle exec rake db:create db:schema:load --trace
@@ -56,7 +56,7 @@ if $SICURO_CONFIG_PRESENT ; then
 fi
 
 echo "<h3>Test</h3>"
-if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .test.override')); then
+if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .test.override//false')); then
     # default language test
     bundle exec rspec spec
 fi
