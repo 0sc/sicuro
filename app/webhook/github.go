@@ -61,7 +61,7 @@ func buildPushEventJob(payload []byte) (*ci.JobDetails, error) {
 		return nil, err
 	}
 
-	branch := evt.After[0:7]
+	branch := evt.After
 	job := &ci.JobDetails{
 		LogFileName:            filepath.Join(evt.Repository.FullName, branch),
 		ProjectBranch:          branch,
@@ -78,7 +78,7 @@ func buildPREventJob(payload []byte) (*ci.JobDetails, error) {
 		return nil, err
 	}
 
-	branch := evt.PullRequest.Head.Sha[0:7]
+	branch := evt.PullRequest.Head.Sha
 	job := &ci.JobDetails{
 		LogFileName:            filepath.Join(evt.Repository.FullName, branch),
 		ProjectBranch:          branch,
