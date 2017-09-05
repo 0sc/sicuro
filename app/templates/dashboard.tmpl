@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Welcome to CI</title>
+    </head>
+    <body>
+        {{ template "notification.tmpl" .FlashMsgs }}
+        <h1>Sicuro Dashboard</h1>
+        <h2>Your repos</h2>
+        <ul>
+            {{ range .Repos }}
+                <li> {{ .FullName }} 
+                    {{ if .IsSubscribed }}
+                        <a href="/show?project={{ .Name }}&owner={{ .Owner.Login }}">view activity</a>
+                    {{ else }}
+                        <a href="/gh/subscribe?project={{ .Name }}&owner={{ .Owner.Login }}">subscribe</a>
+                    {{ end }}
+                </li>
+            {{ end }}
+        </ul>
+        <footer>
+        &copy; all rights reserved
+        </footer>
+    </body>
+</html>

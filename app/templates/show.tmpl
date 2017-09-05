@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Welcome to CI</title>
+    </head>
+    <body>
+        <h1>Sicuro Dashboard</h1>
+        <h2>Your repos</h2>
+        <ul>
+            {{ range .Logs }}
+            <li> <a href="/ci/{{.Name}}">{{.Name}}</a> 
+                {{ if .Active }}
+                    [in progress]
+                {{ else }}
+                    <a href="/run?repo={{.Name}}">rerun</a>
+                {{ end }} 
+            </li>
+            {{ end }}
+        </ul>
+        <footer>
+        &copy; all rights reserved
+        </footer>
+    </body>
+</html>
