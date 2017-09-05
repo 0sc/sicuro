@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+trap 'exit' ERR
 
 source /etc/profile
 
