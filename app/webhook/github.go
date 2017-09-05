@@ -42,16 +42,17 @@ func GithubWebhookHandler(req *http.Request) {
 }
 
 // ManualTrigger manually triggers the ci job
-func ManualTrigger(repo, owner, sha, languague, url string) {
+func ManualTrigger(repo, owner, sha, languague, url string, updateBuildStatusFunc func(string)) {
 	job := &ci.JobDetails{
 		LogFileName:            fmt.Sprintf("%s/%s/%s", owner, repo, sha),
 		ProjectBranch:          sha,
 		ProjectRepositoryURL:   url,
 		ProjectLanguage:        languague,
 		ProjectRespositoryName: repo,
+		UpdateBuildStatus:      updateBuildStatusFunc,
 	}
-	
-	fmt.Println("Here's the job details: ", job)	
+
+	fmt.Println("Here's the job details: ", job)
 	ci.Run(job)
 }
 

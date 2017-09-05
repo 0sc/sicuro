@@ -49,15 +49,21 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func runCIHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) {
-	project := r.URL.Query().Get("project")
-	owner := r.URL.Query().Get("owner")
-	sha := r.URL.Query().Get("sha")
+	repo := r.URL.Query().Get("repo")
+	redirectURL := fmt.Sprintf("ci/%s", repo)
+
+	payload := vcs.GithubRequestParams{
+		Repo:        r.URL.Query().Get("project"),
+		Owner:       r.URL.Query().Get("owner"),
+		Ref:         r.URL.Query().Get("sha"),
+		CallbackURL: fmt.Sprintf("%s/%s", hostAddr, redirectURL),
+	}
 	lang := r.URL.Query().Get("language")
 	url := r.URL.Query().Get("url")
-	repo := r.URL.Query().Get("repo")
+	updateBuildStatusFunc := newGithubClientFromSession(session).UpdateBuildStatus(payload)
 
-	webhook.ManualTrigger(project, owner, sha, lang, url)
-	http.Redirect(w, r, fmt.Sprintf("ci/%s", repo), 302)
+	webhook.ManualTrigger(payload.Repo, payload.Owner, payload.Ref, lang, url, updateBuildStatusFunc)
+	http.Redirect(w, r, redirectURL, 302)
 }
 
 func ciPageHandler(w http.ResponseWriter, r *http.Request) {

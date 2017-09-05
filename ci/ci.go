@@ -29,7 +29,7 @@ type JobDetails struct {
 	ProjectBranch          string
 	ProjectRepositoryURL   string
 	ProjectLanguage        string
-	// UpdateBuildStatus func(string)
+	UpdateBuildStatus      func(string)
 }
 
 func init() {
@@ -81,11 +81,12 @@ func runCI(job *JobDetails) {
 	logFile, err := os.OpenFile(job.logFilePath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		log.Printf("Error %s occured while opening log file: %s\n", err, job.logFilePath)
+		job.updateBuildStatus("error")
 		return
 	}
 
 	defer logFile.Close()
-	// job.UpdateBuildStatus("pending")
+	job.updateBuildStatus("pending")
 
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("%s '%s' %s", filepath.Join(ciDIR, "run.sh"), prepareEnvVars(job), job.ProjectLanguage))
 	cmd.Stdout = logFile
@@ -93,14 +94,22 @@ func runCI(job *JobDetails) {
 	err = cmd.Run()
 
 	msg := "Test completed successfully"
+	status := "success"
 	log.Println("Exit code: ", err)
 	if err != nil {
 		msg = fmt.Sprintf("Test failed with exit code: %s", err)
+		status = "failure"
 	}
 
-	// job.UpdateBuildStatus(status)
+	job.updateBuildStatus(status)
 	logFile.WriteString(fmt.Sprintf("<h4>%s</h4>", msg))
 	logFile.WriteString(fmt.Sprintf("<p><a href='/run?repo=%s'>Rebuild</a><p>", job.LogFileName))
+}
+
+func (job *JobDetails) updateBuildStatus(status string) {
+	if job.UpdateBuildStatus != nil {
+		job.UpdateBuildStatus(status)
+	}
 }
 
 // ActiveCISession returns true if a ci session is active
