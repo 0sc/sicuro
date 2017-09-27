@@ -1,0 +1,51 @@
+hash: b33a7c0f5842b7eefc7d54bae7286f506c2c5d8dddb3e55eb1d788672e1d8618
+updated: 2017-09-27T10:57:29.258606788+01:00
+imports:
+- name: github.com/golang/protobuf
+  version: 130e6b02ab059e7b717a096f397c5b60111cae74
+  subpackages:
+  - proto
+- name: github.com/google/go-github
+  version: 511f540f1887d30b88cee4a2fcd1f2922754acf4
+  subpackages:
+  - github
+- name: github.com/google/go-querystring
+  version: 53e6ce116135b80d037921a7fdd5138cf32d7a8a
+  subpackages:
+  - query
+- name: github.com/gorilla/context
+  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
+- name: github.com/gorilla/securecookie
+  version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
+- name: github.com/gorilla/sessions
+  version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
+- name: github.com/kjk/betterguid
+  version: c442874ba63a7beb6c8b6f14ad1675de747b7f71
+- name: golang.org/x/net
+  version: 0a9397675ba34b2845f758fe3cd68828369c6517
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: golang.org/x/oauth2
+  version: 13449ad91cb26cb47661c1b080790392170385fd
+  subpackages:
+  - internal
+- name: google.golang.org/appengine
+  version: 24e4144ec923c2374f6b06610c0df16a9222c3d9
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
+- name: gopkg.in/go-playground/webhooks.v3
+  version: cd89a10b6412a823fe9d24f12dd7275d036f4f80
+  subpackages:
+  - github
+- name: gopkg.in/rjz/githubhook.v0
+  version: d5f019004f0a15c1c9be5ac3034071ba0dff5832
+testImports: []
