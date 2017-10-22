@@ -1,14 +1,5 @@
 version: '2'
 services:
-  app:
-    image: ubuntu:latest
-    command: bash
-    links:
-     - redis
-     - postgres
-    env:
-      - DATABASE_URL=postgres://postgres@postgres:5432
-      - REDIS_URL=redis://redis:6379
   redis:
     image: redis:alpine
     ports: 
