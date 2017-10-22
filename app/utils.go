@@ -85,7 +85,7 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 	return logs
 }
 
-func getUserProjectsWithSubscriptionInfo(token string) []RepoWithSubscriptionInfo {
+func getUserProjectsWithSubscriptionInfo(token, webhookPath string) []RepoWithSubscriptionInfo {
 	client := vcs.NewGithubClient(token)
 	repos := []RepoWithSubscriptionInfo{}
 	params := vcs.GithubRequestParams{CallbackURL: webhookPath}
@@ -110,4 +110,8 @@ func getProject(token, owner, project string) (*github.Repository, error) {
 
 func newGithubClientFromSession(session *sessions.Session) *vcs.GithubClient {
 	return vcs.NewGithubClient(accessTokenFromSession(session))
+}
+
+func ghCallbackURL(hostAddr string) string {
+	return fmt.Sprintf("http://%s/gh/webhook", hostAddr)
 }

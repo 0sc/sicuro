@@ -56,7 +56,7 @@ func runCIHandler(w http.ResponseWriter, r *http.Request, session *sessions.Sess
 		Repo:        r.URL.Query().Get("project"),
 		Owner:       r.URL.Query().Get("owner"),
 		Ref:         r.URL.Query().Get("sha"),
-		CallbackURL: fmt.Sprintf("%s/%s", hostAddr, redirectURL),
+		CallbackURL: fmt.Sprintf("%s/%s", r.Host, redirectURL),
 	}
 	lang := r.URL.Query().Get("language")
 	url := r.URL.Query().Get("url")
@@ -107,7 +107,7 @@ func ciPageHandler(w http.ResponseWriter, r *http.Request) {
 
 func dashboardPageHandler(w http.ResponseWriter, r *http.Request, session *sessions.Session) {
 	tkn := accessTokenFromSession(session)
-	repos := getUserProjectsWithSubscriptionInfo(tkn)
+	repos := getUserProjectsWithSubscriptionInfo(tkn, ghCallbackURL(r.Host))
 	info := struct {
 		FlashMsgs []interface{}
 		Repos     []RepoWithSubscriptionInfo
@@ -137,7 +137,7 @@ func ghSubscribe(w http.ResponseWriter, r *http.Request, session *sessions.Sessi
 	payload := vcs.GithubRequestParams{
 		Owner:       owner,
 		Repo:        project,
-		CallbackURL: webhookPath,
+		CallbackURL: ghCallbackURL(r.Host),
 		Creds:       os.Getenv("GITHUB_WEBHOOK_SECRET"),
 	}
 

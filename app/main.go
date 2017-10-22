@@ -17,9 +17,7 @@ const (
 )
 
 var (
-	hostAddr     = os.Getenv("HOST_ADDR")
 	port         = os.Getenv("PORT")
-	webhookPath  = fmt.Sprintf("%s/gh/webhook", hostAddr)
 	appDIR       = filepath.Join(os.Getenv("ROOT_DIR"), "app")
 	sessionStore = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
 	templates    = template.Must(template.ParseFiles(fetchTemplates()...))
