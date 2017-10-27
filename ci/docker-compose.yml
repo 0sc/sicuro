@@ -5,7 +5,7 @@ services:
     ports: 
       - "6378:6379"
   postgres:
-    image: postgres:alpine
+    image: postgres:9-alpine
     ports: 
       - "5431:5432"
   mongodb:
