@@ -8,7 +8,7 @@ echo "<h3>Starting the build</h3>"
 
 echo "<h3>Adding SSH keys</h3>"
 mkdir -p /root/.ssh/ && cp -R .ssh/* "$_"
-chmod 600 /root/.ssh/* &&\
+chmod 400 /root/.ssh/* &&\
     ssh-keyscan github.com > /root/.ssh/known_hosts &&\
     ssh-keyscan bitbucket.com >> /root/.ssh/known_hosts
 echo 

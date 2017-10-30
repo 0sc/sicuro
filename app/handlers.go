@@ -56,7 +56,7 @@ func runCIHandler(w http.ResponseWriter, r *http.Request, session *sessions.Sess
 		Repo:        r.URL.Query().Get("project"),
 		Owner:       r.URL.Query().Get("owner"),
 		Ref:         r.URL.Query().Get("sha"),
-		CallbackURL: fmt.Sprintf("%s/%s", r.Host, redirectURL),
+		CallbackURL: fmt.Sprintf("http://%s/%s", r.Host, redirectURL),
 	}
 	lang := r.URL.Query().Get("language")
 	url := r.URL.Query().Get("url")

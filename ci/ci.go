@@ -38,7 +38,7 @@ func init() {
 }
 
 func Run(job *JobDetails) {
-	log.Println("Received job:", job)
+	log.Printf("Received job: %+v\n", job)
 	// job = &JobDetails{
 	// 	LogFileName:            "glassbreakers/glassbreakers/master",
 	// 	ProjectRepositoryURL:   "git@github.com:glassbreakers/glassbreakers",
