@@ -17,19 +17,35 @@ const (
 )
 
 var (
+	// ciDIR is the absolute path to the CI directory
 	ciDIR = filepath.Join(os.Getenv("ROOT_DIR"), "ci")
 	// LogDIR is the absolute path to the CI log directory
 	LogDIR = filepath.Join(ciDIR, "logs")
 )
 
+// JobDetails contains necessary information required to run tests for a given project
 type JobDetails struct {
-	LogFileName            string
-	logFilePath            string
+	// LogFileName is the name to be used for the test output log.
+	// It should always be the commit hash e.g 5eace776ec66a70b2775f4bbb9e2b2847331b0a9
+	// or branch name e.g master
+	LogFileName string
+	logFilePath string
+	// ProjectRespositoryName is the name of the project's repository on the VCS
+	// It's used when cloning the project in test container
 	ProjectRespositoryName string
-	ProjectBranch          string
-	ProjectRepositoryURL   string
-	ProjectLanguage        string
-	UpdateBuildStatus      func(string)
+	// ProjectBranch is the target branch to run the tests on
+	// It could also be a commit hash if the target is a particular commit
+	ProjectBranch string
+	// ProjectRespositoryURL is the SSH url for pull the code from the VCS
+	ProjectRepositoryURL string
+	// ProjectLanguage is the programming language the project is written in
+	// This would be used to determine the docker image for running the tests
+	ProjectLanguage string
+	// UpdateBuildStatus is a callback function that would be executed with updates of the test
+	// It would be executed with the build status pending, failure, success as argument
+	// Once the tests starts, it's executed with the pending status argument
+	// At test completion it would be executed again with the result status: success or failure
+	UpdateBuildStatus func(string)
 }
 
 func init() {
@@ -37,20 +53,16 @@ func init() {
 	os.Setenv("CI_DIR", ciDIR)
 }
 
+// Run triggers the CI server for the given job
+// It builds the absolute path to the job log file, creating necessary parent directories
+// It terminates if a routine is currently active for the given job
+// Otherwise, sets up a new routine for the job
 func Run(job *JobDetails) {
-	log.Printf("Received job: %+v\n", job)
-	// job = &JobDetails{
-	// 	LogFileName:            "glassbreakers/glassbreakers/master",
-	// 	ProjectRepositoryURL:   "git@github.com:glassbreakers/glassbreakers",
-	// 	ProjectBranch:          "master",
-	// 	ProjectLanguage:        "ruby",
-	// 	ProjectRespositoryName: "glassbreakers",
-	// }
-
 	job.logFilePath = filepath.Join(LogDIR, fmt.Sprintf("%s%s", job.LogFileName, LogFileExt))
 	err := createDirFor(job.logFilePath)
 	if err != nil {
-		panic(err)
+		log.Println("Couldn't create directory for job: ", err)
+		return
 	}
 
 	// ensure file is not being written to

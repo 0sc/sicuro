@@ -58,7 +58,7 @@ fi
 echo "<h3>Test</h3>"
 if ! ($SICURO_CONFIG_PRESENT && $(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .test.override//false')); then
     # default language test
-    bundle exec rspec spec
+    bundle exec rake test
 fi
 if $SICURO_CONFIG_PRESENT ; then
     source <(cat $SICURO_CONFIG_FILE | jq --raw-output '. | .test.custom[]?')

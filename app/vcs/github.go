@@ -78,10 +78,9 @@ func (client *GithubClient) UpdateBuildStatus(params GithubRequestParams) func(s
 // Subscribe adds the sicuro webhook to the given repo
 // TODO: save the access token of the user subscribing a repo to the database to use for offline actions such as build status update
 func (client *GithubClient) Subscribe(params GithubRequestParams) error {
-	active := true
 	hook := github.Hook{
 		Name:   github.String("web"),
-		Active: &active,
+		Active: github.Bool(true),
 		Events: []string{"push", "pull_request"},
 		Config: map[string]interface{}{
 			"content_type": "json",
