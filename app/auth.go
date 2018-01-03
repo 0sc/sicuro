@@ -46,7 +46,7 @@ func ghAuth(w http.ResponseWriter, r *http.Request) {
 	rand.Read(b)
 
 	state := base64.URLEncoding.EncodeToString(b)
-	session, err := sessionStore.Get(r, sessionName)
+	session, err := fetchSession(r)
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +62,7 @@ func ghAuth(w http.ResponseWriter, r *http.Request) {
 }
 
 func ghAuthCallback(w http.ResponseWriter, r *http.Request) {
-	session, err := sessionStore.Get(r, sessionName)
+	session, err := fetchSession(r)
 
 	if err != nil {
 		fmt.Fprintln(w, "aborted")

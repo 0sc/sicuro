@@ -1,80 +1,101 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/0sc/sicuro/ci"
-	"github.com/gorilla/sessions"
 )
 
-func ensureValidRequestMethod(cb func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			http.Error(w, "Method not allowed", 405)
-			return
-		}
-		cb(w, r)
+type ctxKey string
+type middleware func(http.HandlerFunc) http.HandlerFunc
+
+const accessTokenCtxKey ctxKey = "AccessToken"
+
+func buildMiddlewareChain(f http.HandlerFunc, m ...middleware) http.HandlerFunc {
+	if len(m) == 0 {
+		return f
 	}
+	return m[0](buildMiddlewareChain(f, m[1:cap(m)]...))
 }
 
-func ensureUserAuthentication(cb func(http.ResponseWriter, *http.Request, *sessions.Session)) func(http.ResponseWriter, *http.Request) {
+func validateRequestMethod(mtd string) middleware {
+	mware := func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != mtd {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			f.ServeHTTP(w, r)
+		}
+	}
+
+	return mware
+}
+
+func authenticationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, err := sessionStore.Get(r, sessionName)
+		session, err := fetchSession(r)
 		if err != nil {
-			http.Redirect(w, r, "/index", 302)
+			http.Redirect(w, r, "/index", http.StatusTemporaryRedirect)
 			return
 		}
 
-		if _, ok := session.Values["accessToken"]; !ok {
+		if tkn, ok := session.Values["accessToken"]; !ok {
 			http.Redirect(w, r, "/gh/auth", 302)
-			return
+		} else {
+			ctx := context.WithValue(r.Context(), accessTokenCtxKey, tkn.(string))
+			f.ServeHTTP(w, r.WithContext(ctx))
 		}
-		cb(w, r, session)
 	}
 }
 
-func ensureValidProject(cb func(http.ResponseWriter, *http.Request, *sessions.Session)) func(http.ResponseWriter, *http.Request, *sessions.Session) {
-	return func(w http.ResponseWriter, r *http.Request, s *sessions.Session) {
-		token := accessTokenFromSession(s)
+func authorizationMiddleware(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accessTkn := r.Context().Value(accessTokenCtxKey).(string)
 		project := r.URL.Query().Get("project")
 		owner := r.URL.Query().Get("owner")
-		repo, err := getProject(token, owner, project)
 
+		repo, err := getProject(accessTkn, owner, project)
 		if err != nil {
-			s.AddFlash("An error occurred while looking up the project. Please confirm that the project exists")
-			s.Save(r, w)
-			http.Redirect(w, r, "/dashboard", 302)
+			flashMsg := "An error occurred while looking up the project. Please confirm that the project exists"
+			addFlashMsg(flashMsg, w, r)
+			http.Redirect(w, r, "/dashboard", http.StatusTemporaryRedirect)
 			return
 		}
+
 		values := r.URL.Query()
 		values.Add("language", *(repo.Language))
 		values.Add("url", *(repo.HTMLURL))
 		r.URL.RawQuery = values.Encode()
 
-		cb(w, r, s)
+		f.ServeHTTP(w, r)
 	}
 }
 
-func ensureSubscribedProject(cb func(http.ResponseWriter, *http.Request, *sessions.Session)) func(http.ResponseWriter, *http.Request, *sessions.Session) {
-	return func(w http.ResponseWriter, r *http.Request, s *sessions.Session) {
+func projectSubscriptionMiddleware(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		project := r.URL.Query().Get("project")
 		owner := r.URL.Query().Get("owner")
-		logDir := filepath.Join(ci.LogDIR, owner, project)
+		logDir := filepath.Join(ci.LogDIR, owner, project) // TODO: move to a func in ci ci.ProjectLogExist()
+
 		if _, err := os.Stat(logDir); err != nil {
-			s.AddFlash("Oops! Looks like the project is not subscribed. Please subscribe and try again.")
-			s.Save(r, w)
+			flashMsg := "Oops! Looks like the project is not subscribed. Please subscribe and try again."
+			addFlashMsg(flashMsg, w, r)
+
 			http.Redirect(w, r, "/dashboard", 302)
 			return
 		}
 
-		cb(w, r, s)
+		f.ServeHTTP(w, r)
 	}
 }
 
-func addProjectDetailsToParams(cb func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+// Update URL's accross the app to remove this
+func parseProjectDetailsMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		repo := r.URL.Query().Get("repo")
 		details := strings.Split(repo, "/")
@@ -91,6 +112,6 @@ func addProjectDetailsToParams(cb func(http.ResponseWriter, *http.Request)) func
 		}
 		r.URL.RawQuery = values.Encode()
 
-		cb(w, r)
+		f.ServeHTTP(w, r)
 	}
 }

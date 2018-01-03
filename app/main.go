@@ -32,17 +32,17 @@ func init() {
 }
 
 func main() {
-	http.HandleFunc("/run", ensureValidRequestMethod(addProjectDetailsToParams(ensureUserAuthentication(ensureValidProject(ensureSubscribedProject(runCIHandler))))))
+	http.HandleFunc("/run", runCIHandler())
+	http.HandleFunc("/show", showPageHandler())
+	http.HandleFunc("/index", indexPageHandler())
+	http.HandleFunc("/dashboard", dashboardPageHandler())
+	http.HandleFunc("/ci/", ciPageHandler())
+	http.HandleFunc("/gh/subscribe", githubSubscriptionHandler())
 
-	http.HandleFunc("/show", ensureValidRequestMethod(ensureUserAuthentication(ensureValidProject(ensureSubscribedProject(showPageHandler)))))
-	http.HandleFunc("/index", ensureValidRequestMethod(indexPageHandler))
-	http.HandleFunc("/dashboard", ensureValidRequestMethod(ensureUserAuthentication(dashboardPageHandler)))
-	http.HandleFunc("/ci/", ensureValidRequestMethod(ciPageHandler))
 	http.HandleFunc("/ws/", wsHandler)
 
 	http.HandleFunc("/gh/auth", ghAuth)
 	http.HandleFunc("/gh/callback", ghAuthCallback)
-	http.HandleFunc("/gh/subscribe", ensureUserAuthentication(ghSubscribe))
 	http.HandleFunc("/gh/webhook", githubWebhookHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,11 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+type projectLogListing struct {
+	Name   string
+	Active bool
+}
+
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates.ExecuteTemplate(w, tmpl+".tmpl", data)
 	if err != nil {
@@ -114,4 +119,20 @@ func newGithubClientFromSession(session *sessions.Session) *vcs.GithubClient {
 
 func ghCallbackURL(hostAddr string) string {
 	return fmt.Sprintf("http://%s/gh/webhook", hostAddr)
+}
+
+// ----
+
+func fetchSession(r *http.Request) (*sessions.Session, error) {
+	return sessionStore.Get(r, sessionName)
+}
+
+func addFlashMsg(msg string, w http.ResponseWriter, r *http.Request) {
+	session, _ := fetchSession(r)
+	session.AddFlash(msg)
+	session.Save(r, w)
+}
+
+func newGithubClient(token string) *vcs.GithubClient {
+	return vcs.NewGithubClient(token)
 }
