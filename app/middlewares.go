@@ -40,12 +40,12 @@ func authenticationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := fetchSession(r)
 		if err != nil {
-			http.Redirect(w, r, "/index", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, indexPath, http.StatusTemporaryRedirect)
 			return
 		}
 
 		if tkn, ok := session.Values["accessToken"]; !ok {
-			http.Redirect(w, r, "/gh/auth", 302)
+			http.Redirect(w, r, ghAuthPath, 302)
 		} else {
 			ctx := context.WithValue(r.Context(), accessTokenCtxKey, tkn.(string))
 			f.ServeHTTP(w, r.WithContext(ctx))
@@ -63,7 +63,7 @@ func authorizationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 		if err != nil {
 			flashMsg := "An error occurred while looking up the project. Please confirm that the project exists"
 			addFlashMsg(flashMsg, w, r)
-			http.Redirect(w, r, "/dashboard", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, dashboardPath, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -86,7 +86,7 @@ func projectSubscriptionMiddleware(f http.HandlerFunc) http.HandlerFunc {
 			flashMsg := "Oops! Looks like the project is not subscribed. Please subscribe and try again."
 			addFlashMsg(flashMsg, w, r)
 
-			http.Redirect(w, r, "/dashboard", 302)
+			http.Redirect(w, r, dashboardPath, 302)
 			return
 		}
 
@@ -103,7 +103,7 @@ func parseProjectDetailsMiddleware(f http.HandlerFunc) http.HandlerFunc {
 		values := r.URL.Query()
 
 		if len(details) > len(attrs) {
-			http.Redirect(w, r, "/dashboard", 302)
+			http.Redirect(w, r, dashboardPath, 302)
 			return
 		}
 

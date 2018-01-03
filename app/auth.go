@@ -15,12 +15,11 @@ import (
 const (
 	githubAuthorizeURL = "https://github.com/login/oauth/authorize"
 	githubTokenURL     = "https://github.com/login/oauth/access_token"
-	redirectURL        = ""
 )
 
 var (
-	githubOauthCfg *oauth2.Config
-	scopes         = []string{"repo"}
+	githubOAuth *oauth2.Config
+	scopes      = []string{"repo"}
 )
 
 type RepoWithSubscriptionInfo struct {
@@ -28,16 +27,15 @@ type RepoWithSubscriptionInfo struct {
 	*github.Repository
 }
 
-func setupGithubOauthCfg() {
-	githubOauthCfg = &oauth2.Config{
+func setupGithubOAuth() {
+	githubOAuth = &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  githubAuthorizeURL,
 			TokenURL: githubTokenURL,
 		},
-		RedirectURL: redirectURL,
-		Scopes:      scopes,
+		Scopes: scopes,
 	}
 }
 
@@ -57,7 +55,7 @@ func ghAuth(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	url := githubOauthCfg.AuthCodeURL(state)
+	url := githubOAuth.AuthCodeURL(state)
 	http.Redirect(w, r, url, 302)
 }
 
@@ -74,7 +72,7 @@ func ghAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tkn, err := githubOauthCfg.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
+	tkn, err := githubOAuth.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
 	if err != nil {
 		fmt.Fprintln(w, "there was an issue getting your token")
 		return
@@ -85,7 +83,7 @@ func ghAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := github.NewClient(githubOauthCfg.Client(oauth2.NoContext, tkn))
+	client := github.NewClient(githubOAuth.Client(oauth2.NoContext, tkn))
 
 	user, _, err := client.Users.Get(context.Background(), "")
 	if err != nil {
@@ -97,5 +95,5 @@ func ghAuthCallback(w http.ResponseWriter, r *http.Request) {
 	session.Values["accessToken"] = tkn.AccessToken
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/dashboard", 302)
+	http.Redirect(w, r, dashboardPath, 302)
 }

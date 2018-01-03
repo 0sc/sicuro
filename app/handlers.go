@@ -14,7 +14,18 @@ import (
 	"github.com/0sc/sicuro/app/vcs"
 	"github.com/0sc/sicuro/app/webhook"
 	"github.com/0sc/sicuro/ci"
+	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
+)
+
+var (
+	sessionSecret = os.Getenv("SESSION_SECRET")
+	sessionStore  = sessions.NewCookieStore([]byte(sessionSecret))
+	templates     = template.Must(template.ParseFiles(fetchTemplates()...))
+	upgrader      = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
 )
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,16 +41,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if n, err := strconv.ParseInt(r.FormValue("lastMod"), 16, 64); err == nil {
 		lastMod = time.Unix(0, n)
 	}
-	logFile := logFilePathFromRequest("/ws/", r)
+	logFile := logFilePathFromRequest(websocketPath, r)
 	go writer(ws, lastMod, logFile)
-}
-
-func temp() http.HandlerFunc {
-	self := func(w http.ResponseWriter, r *http.Request) {}
-
-	middlewares := []middleware{}
-
-	return buildMiddlewareChain(self, middlewares...)
 }
 
 func githubWebhookHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +53,7 @@ func githubSubscriptionHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
 		project := r.URL.Query().Get("project")
 		owner := r.URL.Query().Get("owner")
-		redirPath := "/dashboard"
+		redirPath := dashboardPath
 		session, _ := fetchSession(r)
 		token := r.Context().Value(accessTokenCtxKey).(string)
 		client := newGithubClient(token)
@@ -68,7 +71,7 @@ func githubSubscriptionHandler() http.HandlerFunc {
 			session.AddFlash("An error occurred. The project might have already been subscribed.")
 		} else {
 			session.AddFlash("Sicro is now watching: ", project)
-			redirPath = fmt.Sprintf("/show?project=%s&owner=%s", project, owner)
+			redirPath = fmt.Sprintf("%s?project=%s&owner=%s", showPath, project, owner)
 		}
 
 		session.Save(r, w)
@@ -84,7 +87,7 @@ func githubSubscriptionHandler() http.HandlerFunc {
 
 func ciPageHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
-		logFile := logFilePathFromRequest("/ci/", r)
+		logFile := logFilePathFromRequest(ciPath, r)
 		fmt.Println("The logfile", logFile)
 		if _, err := os.Open(logFile); err != nil {
 			http.Error(w, "Not found", 404)
@@ -97,7 +100,7 @@ func ciPageHandler() http.HandlerFunc {
 		}
 
 		session, _ := fetchSession(r)
-		projectPath, _ := filepath.Rel("/ci/", r.URL.Path)
+		projectPath, _ := filepath.Rel(ciPath, r.URL.Path)
 		details := strings.Split(projectPath, "/")
 
 		var v = struct {
@@ -158,7 +161,7 @@ func indexPageHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
 		_, err := fetchSession(r)
 		if err == nil { // then user has a session set
-			http.Redirect(w, r, "/dashboard", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, dashboardPath, http.StatusTemporaryRedirect)
 			return
 		}
 		renderTemplate(w, "index", nil)

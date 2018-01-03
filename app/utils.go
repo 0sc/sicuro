@@ -118,7 +118,7 @@ func newGithubClientFromSession(session *sessions.Session) *vcs.GithubClient {
 }
 
 func ghCallbackURL(hostAddr string) string {
-	return fmt.Sprintf("http://%s/gh/webhook", hostAddr)
+	return fmt.Sprintf("http://%s%s", hostAddr, ghWebhookPath)
 }
 
 // ----
