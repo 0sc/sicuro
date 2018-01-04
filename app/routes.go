@@ -1,6 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 const (
 	runCIPath       = "/run"
@@ -14,6 +17,10 @@ const (
 	ghWebhookPath   = "/gh/webhook"
 	websocketPath   = "/ws/"
 )
+
+var ghCallbackURL = func(hostAddr string) string {
+	return fmt.Sprintf("http://%s%s", hostAddr, ghWebhookPath)
+}
 
 func registerRoutes() {
 	http.HandleFunc(ciPath, ciPageHandler())
