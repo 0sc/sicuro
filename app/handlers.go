@@ -55,7 +55,7 @@ func githubSubscriptionHandler() http.HandlerFunc {
 		owner := r.URL.Query().Get("owner")
 		redirPath := dashboardPath
 		session, _ := fetchSession(r)
-		token := r.Context().Value(accessTokenCtxKey).(string)
+		token := r.Context().Value(accessTokenKey).(string)
 		client := newGithubClient(token)
 
 		payload := vcs.GithubRequestParams{
@@ -134,13 +134,13 @@ func ciPageHandler() http.HandlerFunc {
 
 func dashboardPageHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
-		token := r.Context().Value(accessTokenCtxKey).(string)
+		token := r.Context().Value(accessTokenKey).(string)
 		repos := getUserProjectsWithSubscriptionInfo(token, ghCallbackURL(r.Host))
 		session, _ := fetchSession(r)
 
 		info := struct {
 			FlashMsgs []interface{}
-			Repos     []RepoWithSubscriptionInfo
+			Repos     []repoWithSubscriptionInfo
 		}{
 			FlashMsgs: session.Flashes(),
 			Repos:     repos,
@@ -211,7 +211,7 @@ func runCIHandler() http.HandlerFunc {
 
 		lang := r.URL.Query().Get("language")
 		url := r.URL.Query().Get("url")
-		token := r.Context().Value(accessTokenCtxKey).(string)
+		token := r.Context().Value(accessTokenKey).(string)
 
 		updateBuildStatusFunc := newGithubClient(token).UpdateBuildStatus(payload)
 

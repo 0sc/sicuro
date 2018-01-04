@@ -13,7 +13,7 @@ import (
 type ctxKey string
 type middleware func(http.HandlerFunc) http.HandlerFunc
 
-const accessTokenCtxKey ctxKey = "AccessToken"
+const accessTokenKey ctxKey = "AccessToken"
 
 func buildMiddlewareChain(f http.HandlerFunc, m ...middleware) http.HandlerFunc {
 	if len(m) == 0 {
@@ -44,10 +44,10 @@ func authenticationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if tkn, ok := session.Values["accessToken"]; !ok {
+		if tkn, ok := session.Values[accessTokenKey]; !ok {
 			http.Redirect(w, r, ghAuthPath, 302)
 		} else {
-			ctx := context.WithValue(r.Context(), accessTokenCtxKey, tkn.(string))
+			ctx := context.WithValue(r.Context(), accessTokenKey, tkn.(string))
 			f.ServeHTTP(w, r.WithContext(ctx))
 		}
 	}
@@ -55,7 +55,7 @@ func authenticationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 
 func authorizationMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accessTkn := r.Context().Value(accessTokenCtxKey).(string)
+		accessTkn := r.Context().Value(accessTokenKey).(string)
 		project := r.URL.Query().Get("project")
 		owner := r.URL.Query().Get("owner")
 

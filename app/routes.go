@@ -32,8 +32,8 @@ func registerRoutes() {
 
 	http.HandleFunc(websocketPath, wsHandler)
 
-	http.HandleFunc(ghAuthPath, ghAuth)
-	http.HandleFunc(ghCallbackPath, ghAuthCallback)
+	http.HandleFunc(ghAuthPath, ghAuthHandler)
+	http.HandleFunc(ghCallbackPath, ghAuthCallbackHandler)
 	http.HandleFunc(ghWebhookPath, githubWebhookHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

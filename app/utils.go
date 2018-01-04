@@ -19,6 +19,11 @@ type projectLogListing struct {
 	Active bool
 }
 
+type repoWithSubscriptionInfo struct {
+	IsSubscribed bool
+	*github.Repository
+}
+
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates.ExecuteTemplate(w, tmpl+".tmpl", data)
 	if err != nil {
@@ -90,16 +95,16 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 	return logs
 }
 
-func getUserProjectsWithSubscriptionInfo(token, webhookPath string) []RepoWithSubscriptionInfo {
+func getUserProjectsWithSubscriptionInfo(token, webhookPath string) []repoWithSubscriptionInfo {
 	client := newGithubClient(token)
-	repos := []RepoWithSubscriptionInfo{}
+	repos := []repoWithSubscriptionInfo{}
 	params := vcs.GithubRequestParams{CallbackURL: webhookPath}
 
 	for _, repo := range client.UserRepos() {
 		params.Owner = *(repo.Owner.Login)
 		params.Repo = *(repo.Name)
 
-		repos = append(repos, RepoWithSubscriptionInfo{client.IsRepoSubscribed(params), repo})
+		repos = append(repos, repoWithSubscriptionInfo{client.IsRepoSubscribed(params), repo})
 	}
 
 	return repos
