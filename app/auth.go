@@ -93,7 +93,11 @@ func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// session.Values["name"] = user.Name
 	session.Values[accessTokenKey] = tkn.AccessToken
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		log.Println("Error occured while saving access token: ", err)
+		renderTemplate(w, "error", "Something went wrong while handling your token. Please try again")
+	}
 
 	http.Redirect(w, r, dashboardPath, http.StatusTemporaryRedirect)
 }

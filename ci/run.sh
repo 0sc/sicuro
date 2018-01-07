@@ -9,5 +9,9 @@ trap 'exit' ERR
 # the second argument is the language of the project
 # which is gotten from the github details for the project
 
+DOCKER_ENVS=${1}
+DOCKER_IMAGE=${2}
+
 docker run --rm -v ${CI_DIR}/.ssh:/.ssh \
-				--network ci_default ${1} ${DOCKER_IMAGE_REPO}/sicuro_${2}:0.2
+				--network ci_default $DOCKER_ENVS $DOCKER_IMAGE
+				

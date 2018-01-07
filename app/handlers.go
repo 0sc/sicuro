@@ -55,7 +55,7 @@ func githubSubscriptionHandler() http.HandlerFunc {
 		owner := r.URL.Query().Get("owner")
 		redirPath := dashboardPath
 		session, _ := fetchSession(r)
-		token := r.Context().Value(accessTokenKey).(string)
+		token := r.Context().Value(accessTokenCtxKey).(string)
 		client := newGithubClient(token)
 
 		payload := vcs.GithubRequestParams{
@@ -134,7 +134,7 @@ func ciPageHandler() http.HandlerFunc {
 
 func dashboardPageHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
-		token := r.Context().Value(accessTokenKey).(string)
+		token := r.Context().Value(accessTokenCtxKey).(string)
 		repos := getUserProjectsWithSubscriptionInfo(token, ghCallbackURL(r.Host))
 		session, _ := fetchSession(r)
 
@@ -159,8 +159,8 @@ func dashboardPageHandler() http.HandlerFunc {
 
 func indexPageHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
-		_, err := fetchSession(r)
-		if err == nil { // then user has a session set
+		session, err := fetchSession(r)
+		if err == nil && !session.IsNew { // then user has a session set
 			http.Redirect(w, r, dashboardPath, http.StatusTemporaryRedirect)
 			return
 		}
@@ -212,7 +212,7 @@ func runCIHandler() http.HandlerFunc {
 
 		lang := params.Get("language")
 		url := params.Get("url")
-		token := r.Context().Value(accessTokenKey).(string)
+		token := r.Context().Value(accessTokenCtxKey).(string)
 
 		updateBuildStatusFunc := newGithubClient(token).UpdateBuildStatus(payload)
 

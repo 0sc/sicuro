@@ -26,9 +26,14 @@ The app should now be available at `localhost:PORT`. _(the port would be what yo
 
 To test the github webhook locally, you'll need to setup a URL that tunnels requests over the internet to the server running on your machine. A good tool of choice is Ngrok, easy to setup and use. See instructions [here](https://ngrok.com/download)
 
+<img width="556" alt="screen shot 2018-01-07 at 5 32 46 pm" src="https://user-images.githubusercontent.com/11221027/34655897-b7c220d0-f411-11e7-9eea-fe965e323da7.png">
+
 Once you have the tunnel setup (and running), you should be assigned a URL that would tunnel requests to your local server, for example, https://example.ngrok.io. Head over to your OAuth dashboard on Github and set the callback URL to https://example.ngrok.io/gh/callback _(replace https://example.ngrok.io)_ with your ngrok URL.
 
 You can now browse the app with the ngrok URL and try out the webhook callback.
+<img width="421" alt="screen shot 2018-01-07 at 11 39 38 pm" src="https://user-images.githubusercontent.com/11221027/34655358-5b37e8a8-f408-11e7-9742-e254f6d1e51b.png">
+<img width="570" alt="screen shot 2018-01-07 at 11 50 03 pm" src="https://user-images.githubusercontent.com/11221027/34655359-5b5f76a2-f408-11e7-81e6-46d63b0c940b.png">
+<img width="824" alt="screen shot 2018-01-07 at 11 53 21 pm" src="https://user-images.githubusercontent.com/11221027/34655360-5b886666-f408-11e7-8340-7c2f942a42fa.png">
 
 ## Contributing
 

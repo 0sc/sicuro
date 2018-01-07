@@ -3,7 +3,6 @@ export GITHUB_CLIENT_SECRET=replace-with-your-github-oauth-client-secret
 export GITHUB_WEBHOOK_SECRET=replace-with-your-github-webhook-secret
 export SESSION_SECRET=change-this-to-any-random-string
 
-export DOCKER_IMAGE_REPO=xovox #dockerhub repository where the test container images is hosted
 export PORT=8080
 export ROOT_DIR=$(shell pwd)
 

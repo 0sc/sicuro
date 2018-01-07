@@ -21,6 +21,12 @@ var (
 	ciDIR = filepath.Join(os.Getenv("ROOT_DIR"), "ci")
 	// LogDIR is the absolute path to the CI log directory
 	LogDIR = filepath.Join(ciDIR, "logs")
+	// List of supported languages
+	// and the available docker image version
+	availableImages = map[string]string{
+		"ruby":       "xovox/sicuro_ruby:0.2",
+		"javascript": "xovox/sicuro_javascript:0.2",
+	}
 )
 
 // JobDetails contains necessary information required to run tests for a given project
@@ -78,6 +84,10 @@ func Run(job *JobDetails) {
 	}
 
 	job.ProjectLanguage = strings.ToLower(job.ProjectLanguage)
+	if !supportedLanguage(job.ProjectLanguage) {
+		log.Println("Project Language is currently not supported")
+		return
+	}
 
 	log.Printf("Running job: %v\n", job)
 	go runCI(job)
@@ -100,7 +110,8 @@ func runCI(job *JobDetails) {
 	defer logFile.Close()
 	job.updateBuildStatus("pending")
 
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("%s '%s' %s", filepath.Join(ciDIR, "run.sh"), prepareEnvVars(job), job.ProjectLanguage))
+	containerImg := availableImages[job.ProjectLanguage]
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("%s '%s' %s", filepath.Join(ciDIR, "run.sh"), prepareEnvVars(job), containerImg))
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 	err = cmd.Run()
@@ -124,6 +135,11 @@ func (job *JobDetails) updateBuildStatus(status string) {
 	}
 }
 
+func supportedLanguage(lang string) (ok bool) {
+	_, ok = availableImages[lang]
+	return
+}
+
 // ActiveCISession returns true if a ci session is active
 // it returns false otherwise
 func ActiveCISession(logFile string) bool {
@@ -136,8 +152,6 @@ func prepareEnvVars(job *JobDetails) (vars string) {
 	vars = fmt.Sprintf("%s -e %s=%s", vars, "PROJECT_REPOSITORY_URL", job.ProjectRepositoryURL)
 	vars = fmt.Sprintf("%s -e %s=%s", vars, "PROJECT_REPOSITORY_NAME", job.ProjectRespositoryName)
 	vars = fmt.Sprintf("%s -e %s=%s", vars, "PROJECT_LANGUAGE", job.ProjectLanguage)
-	vars = fmt.Sprintf("%s -e %s=%s", vars, "REDIS_URL", "redis://redis:6379")
-	vars = fmt.Sprintf("%s -e %s=%s", vars, "MONGODB_URL", "mongodb://mongodb:27017")
 	vars = fmt.Sprintf("%s -e %s=%s", vars, "DATABASE_URL", "postgres://postgres@postgres:5432/"+betterguid.New())
 
 	return
