@@ -14,16 +14,22 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+type projectLogListing struct {
+	Name   string
+	Active bool
+}
+
+type repoWithSubscriptionInfo struct {
+	IsSubscribed bool
+	*github.Repository
+}
+
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates.ExecuteTemplate(w, tmpl+".tmpl", data)
 	if err != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func accessTokenFromSession(session *sessions.Session) string {
-	return session.Values["accessToken"].(string)
 }
 
 func logFilePathFromRequest(prefix string, r *http.Request) string {
@@ -59,19 +65,23 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 		log.Printf("An error: %s; occured with listing logs for %s\n", err, dirName)
 		return logs
 	}
+
 	if !fileInfo.IsDir() {
 		return append(logs, projectLogListing{Name: dirName, Active: ci.ActiveCISession(dirName)})
 	}
+
 	dir, err := os.Open(dirName)
 	if err != nil {
 		log.Printf("An error: %s; occured will opening dir %s", err, dirName)
 		return logs
 	}
+
 	files, err := dir.Readdir(0)
 	if err != nil {
 		log.Printf("An error: %s; occured will reading files from dir %s", err, dirName)
 		return logs
 	}
+
 	for _, file := range files {
 		fileFullName := filepath.Join(dirName, file.Name())
 		if file.IsDir() {
@@ -85,33 +95,41 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 	return logs
 }
 
-func getUserProjectsWithSubscriptionInfo(token, webhookPath string) []RepoWithSubscriptionInfo {
-	client := vcs.NewGithubClient(token)
-	repos := []RepoWithSubscriptionInfo{}
+func getUserProjectsWithSubscriptionInfo(token, webhookPath string) []repoWithSubscriptionInfo {
+	client := newGithubClient(token)
+	repos := []repoWithSubscriptionInfo{}
 	params := vcs.GithubRequestParams{CallbackURL: webhookPath}
 
 	for _, repo := range client.UserRepos() {
 		params.Owner = *(repo.Owner.Login)
 		params.Repo = *(repo.Name)
 
-		repos = append(repos, RepoWithSubscriptionInfo{client.IsRepoSubscribed(params), repo})
+		repos = append(repos, repoWithSubscriptionInfo{client.IsRepoSubscribed(params), repo})
 	}
 
 	return repos
 }
 
 func getProject(token, owner, project string) (*github.Repository, error) {
+	client := newGithubClient(token)
 	payload := vcs.GithubRequestParams{
 		Owner: owner,
 		Repo:  project,
 	}
-	return vcs.NewGithubClient(token).Repo(payload)
+
+	return client.Repo(payload)
 }
 
-func newGithubClientFromSession(session *sessions.Session) *vcs.GithubClient {
-	return vcs.NewGithubClient(accessTokenFromSession(session))
+func fetchSession(r *http.Request) (*sessions.Session, error) {
+	return sessionStore.Get(r, sessionName)
 }
 
-func ghCallbackURL(hostAddr string) string {
-	return fmt.Sprintf("http://%s/gh/webhook", hostAddr)
+func addFlashMsg(msg string, w http.ResponseWriter, r *http.Request) {
+	session, _ := fetchSession(r)
+	session.AddFlash(msg)
+	session.Save(r, w)
+}
+
+func newGithubClient(token string) *vcs.GithubClient {
+	return vcs.NewGithubClient(token)
 }

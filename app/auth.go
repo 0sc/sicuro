@@ -1,101 +1,99 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 
-	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
 
 const (
 	githubAuthorizeURL = "https://github.com/login/oauth/authorize"
 	githubTokenURL     = "https://github.com/login/oauth/access_token"
-	redirectURL        = ""
 )
 
 var (
-	githubOauthCfg *oauth2.Config
-	scopes         = []string{"repo"}
+	githubOAuth *oauth2.Config
+	scopes      = []string{"repo"}
 )
 
-type RepoWithSubscriptionInfo struct {
-	IsSubscribed bool
-	*github.Repository
-}
-
-func setupGithubOauthCfg() {
-	githubOauthCfg = &oauth2.Config{
+func setupGithubOAuth() {
+	githubOAuth = &oauth2.Config{
 		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  githubAuthorizeURL,
 			TokenURL: githubTokenURL,
 		},
-		RedirectURL: redirectURL,
-		Scopes:      scopes,
+		Scopes: scopes,
 	}
 }
 
-func ghAuth(w http.ResponseWriter, r *http.Request) {
+func ghAuthHandler(w http.ResponseWriter, r *http.Request) {
 	b := make([]byte, 16)
 	rand.Read(b)
 
 	state := base64.URLEncoding.EncodeToString(b)
-	session, err := sessionStore.Get(r, sessionName)
+	session, err := fetchSession(r)
 	if err != nil {
-		panic(err)
+		log.Println("Error occured while fetching session: ", err)
+		renderTemplate(w, "error", "Your browser session is invalid. Please try again.")
+		return
 	}
+
 	session.Values["state"] = state
 	err = session.Save(r, w)
-
 	if err != nil {
-		panic(err)
+		log.Println("Error occured while saving state code to session: ", err)
+		renderTemplate(w, "error", "We encountered an error while saving your browser session. Please try again.")
+		return
 	}
 
-	url := githubOauthCfg.AuthCodeURL(state)
-	http.Redirect(w, r, url, 302)
+	url := githubOAuth.AuthCodeURL(state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func ghAuthCallback(w http.ResponseWriter, r *http.Request) {
-	session, err := sessionStore.Get(r, sessionName)
-
+func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	session, err := fetchSession(r)
 	if err != nil {
-		fmt.Fprintln(w, "aborted")
+		log.Println("Error occured while fetching session: ", err)
+		renderTemplate(w, "error", "Oops! Login request didn't complete successfully. Please try again.")
 		return
 	}
 
 	if r.URL.Query().Get("state") != session.Values["state"] {
-		fmt.Fprintln(w, "no state match; possible csrf OR cookies not enabled")
+		renderTemplate(w, "error", "Hmm ... your login request seems fishy. Possible CSRF or maybe cookies not enabled. Please try again")
 		return
 	}
 
-	tkn, err := githubOauthCfg.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
+	tkn, err := githubOAuth.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
 	if err != nil {
-		fmt.Fprintln(w, "there was an issue getting your token")
+		log.Println("Error occured while exchanging Github Access Token: ", err)
+		renderTemplate(w, "error", "We couldn't retrieve your Github Access Token. Please try again")
 		return
 	}
 
 	if !tkn.Valid() {
-		fmt.Fprintln(w, "retrieved invalid token")
+		log.Println("Error retrieved token is invalid")
+		renderTemplate(w, "error", "The token we got from Github is invalid. Please try again")
 		return
 	}
 
-	client := github.NewClient(githubOauthCfg.Client(oauth2.NoContext, tkn))
+	// client := github.NewClient(githubOAuth.Client(oauth2.NoContext, tkn))
 
-	user, _, err := client.Users.Get(context.Background(), "")
-	if err != nil {
-		fmt.Println(w, "error getting name")
-		return
-	}
+	// user, _, err := client.Users.Get(context.Background(), "")
+	// if err != nil {
+	// 	log.Println("Error occured while getting user name: ", err)
+	// 	fmt.Println(w, "error getting name")
+	// 	return
+	// }
 
-	session.Values["name"] = user.Name
-	session.Values["accessToken"] = tkn.AccessToken
+	// session.Values["name"] = user.Name
+	session.Values[accessTokenKey] = tkn.AccessToken
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/dashboard", 302)
+	http.Redirect(w, r, dashboardPath, http.StatusTemporaryRedirect)
 }
