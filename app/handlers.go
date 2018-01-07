@@ -199,18 +199,19 @@ func showPageHandler() http.HandlerFunc {
 
 func runCIHandler() http.HandlerFunc {
 	self := func(w http.ResponseWriter, r *http.Request) {
-		repo := r.URL.Query().Get("repo")
+		params := r.URL.Query()
+		repo := params.Get("repo")
 		redirectURL := fmt.Sprintf("ci/%s", repo)
 
 		payload := vcs.GithubRequestParams{
-			Repo:        r.URL.Query().Get("project"),
-			Owner:       r.URL.Query().Get("owner"),
-			Ref:         r.URL.Query().Get("sha"),
+			Repo:        params.Get("project"),
+			Owner:       params.Get("owner"),
+			Ref:         params.Get("sha"),
 			CallbackURL: fmt.Sprintf("http://%s/%s", r.Host, redirectURL),
 		}
 
-		lang := r.URL.Query().Get("language")
-		url := r.URL.Query().Get("url")
+		lang := params.Get("language")
+		url := params.Get("url")
 		token := r.Context().Value(accessTokenKey).(string)
 
 		updateBuildStatusFunc := newGithubClient(token).UpdateBuildStatus(payload)

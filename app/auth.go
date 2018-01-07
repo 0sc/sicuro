@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -41,12 +40,16 @@ func ghAuthHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := fetchSession(r)
 	if err != nil {
 		log.Println("Error occured while fetching session: ", err)
+		renderTemplate(w, "error", "Your browser session is invalid. Please try again.")
+		return
 	}
 
 	session.Values["state"] = state
 	err = session.Save(r, w)
 	if err != nil {
 		log.Println("Error occured while saving state code to session: ", err)
+		renderTemplate(w, "error", "We encountered an error while saving your browser session. Please try again.")
+		return
 	}
 
 	url := githubOAuth.AuthCodeURL(state)
@@ -57,25 +60,25 @@ func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := fetchSession(r)
 	if err != nil {
 		log.Println("Error occured while fetching session: ", err)
-		fmt.Fprintln(w, "Oops! Login request didn't complete successfully. Please try again.")
+		renderTemplate(w, "error", "Oops! Login request didn't complete successfully. Please try again.")
 		return
 	}
 
 	if r.URL.Query().Get("state") != session.Values["state"] {
-		fmt.Fprintln(w, "Hmm ... your login request seems fishy. Possible CSRF or maybe cookies not enabled. Please try again")
+		renderTemplate(w, "error", "Hmm ... your login request seems fishy. Possible CSRF or maybe cookies not enabled. Please try again")
 		return
 	}
 
 	tkn, err := githubOAuth.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
 	if err != nil {
 		log.Println("Error occured while exchanging Github Access Token: ", err)
-		fmt.Fprintln(w, "We couldn't retrieve your Github Access Token. Please try again")
+		renderTemplate(w, "error", "We couldn't retrieve your Github Access Token. Please try again")
 		return
 	}
 
 	if !tkn.Valid() {
 		log.Println("Error retrieved token is invalid")
-		fmt.Fprintln(w, "retrieved invalid token")
+		renderTemplate(w, "error", "The token we got from Github is invalid. Please try again")
 		return
 	}
 
