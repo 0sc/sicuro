@@ -1,4 +1,3 @@
 ci/.ssh/*
 ci/logs/*
-start.sh
 vendor
