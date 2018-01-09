@@ -1,9 +1,9 @@
 #!/bin/bash
 trap 'exit' ERR
 
-source /etc/profile
+# source /etc/profile 
 # [[ $- == *i* ]] && echo 'Interactive' || echo 'Not interactive'
-type rvm | head -1
+# type rvm | head -1 # check if rvm is installed
 echo "<h3>Starting the build</h3>"
 
 echo "<h3>Adding SSH keys</h3>"
