@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>SicuroCI - Build Logs</title>
+    </head>
+    <body>
+        {{ template "notification.tmpl" .Notifications }}
+        <div>
+            <p>Project: {{ .Project }}</p>
+            <p>Owner: {{ .Owner }}</p>
+            <p>Commit: {{ .Commit }}</p>
+
+        </div>
+        <h1>Test output</h1>
+        <pre id="fileData">{{.Data}}</pre>
+        <script type="text/javascript">
+            (function() {
+                var data = document.getElementById("fileData");
+                var conn = new WebSocket("ws://{{.Host}}/ws/{{.ProjectPath}}?lastMod={{.LastMod}}");
+                conn.onclose = function(evt) {
+                    data.innerHTML = 'Connection closed';
+                }
+                conn.onmessage = function(evt) {
+                    data.innerHTML = evt.data;
+                }
+            })();
+        </script>
+    </body>
+</html>
