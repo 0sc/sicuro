@@ -79,7 +79,7 @@ func Run(job *JobDetails) {
 
 	// prepare log file i.e clear file content or create new file
 	if err := exec.Command("bash", "-c", "> "+job.logFilePath).Run(); err != nil {
-		log.Printf("Error: %s occured while trying to clear logfile %s\n", err, job.logFilePath)
+		log.Printf("Error: %s occurred while trying to clear logfile %s\n", err, job.logFilePath)
 		return
 	}
 
@@ -102,7 +102,7 @@ func createDirFor(fileName string) error {
 func runCI(job *JobDetails) {
 	logFile, err := os.OpenFile(job.logFilePath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
-		log.Printf("Error %s occured while opening log file: %s\n", err, job.logFilePath)
+		log.Printf("Error %s occurred while opening log file: %s\n", err, job.logFilePath)
 		job.updateBuildStatus("error")
 		return
 	}

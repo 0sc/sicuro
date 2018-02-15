@@ -95,7 +95,7 @@ func projectSubscriptionMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Update URL's accross the app to remove this
+// Update URL's across the app to remove this
 func parseProjectDetailsMiddleware(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		repo := r.URL.Query().Get("repo")
