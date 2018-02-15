@@ -62,7 +62,7 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 	fileInfo, err := os.Stat(dirName)
 	logs := []projectLogListing{}
 	if err != nil {
-		log.Printf("An error: %s; occured with listing logs for %s\n", err, dirName)
+		log.Printf("An error: %s; occurred with listing logs for %s\n", err, dirName)
 		return logs
 	}
 
@@ -72,13 +72,13 @@ func listProjectLogsInDir(dirName string) []projectLogListing {
 
 	dir, err := os.Open(dirName)
 	if err != nil {
-		log.Printf("An error: %s; occured will opening dir %s", err, dirName)
+		log.Printf("An error: %s; occurred will opening dir %s", err, dirName)
 		return logs
 	}
 
 	files, err := dir.Readdir(0)
 	if err != nil {
-		log.Printf("An error: %s; occured will reading files from dir %s", err, dirName)
+		log.Printf("An error: %s; occurred will reading files from dir %s", err, dirName)
 		return logs
 	}
 

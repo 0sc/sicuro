@@ -39,7 +39,7 @@ func ghAuthHandler(w http.ResponseWriter, r *http.Request) {
 	state := base64.URLEncoding.EncodeToString(b)
 	session, err := fetchSession(r)
 	if err != nil {
-		log.Println("Error occured while fetching session: ", err)
+		log.Println("Error occurred while fetching session: ", err)
 		renderTemplate(w, "error", "Your browser session is invalid. Please try again.")
 		return
 	}
@@ -47,7 +47,7 @@ func ghAuthHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["state"] = state
 	err = session.Save(r, w)
 	if err != nil {
-		log.Println("Error occured while saving state code to session: ", err)
+		log.Println("Error occurred while saving state code to session: ", err)
 		renderTemplate(w, "error", "We encountered an error while saving your browser session. Please try again.")
 		return
 	}
@@ -59,7 +59,7 @@ func ghAuthHandler(w http.ResponseWriter, r *http.Request) {
 func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := fetchSession(r)
 	if err != nil {
-		log.Println("Error occured while fetching session: ", err)
+		log.Println("Error occurred while fetching session: ", err)
 		renderTemplate(w, "error", "Oops! Login request didn't complete successfully. Please try again.")
 		return
 	}
@@ -71,7 +71,7 @@ func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	tkn, err := githubOAuth.Exchange(oauth2.NoContext, r.URL.Query().Get("code"))
 	if err != nil {
-		log.Println("Error occured while exchanging Github Access Token: ", err)
+		log.Println("Error occurred while exchanging Github Access Token: ", err)
 		renderTemplate(w, "error", "We couldn't retrieve your Github Access Token. Please try again")
 		return
 	}
@@ -86,7 +86,7 @@ func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// user, _, err := client.Users.Get(context.Background(), "")
 	// if err != nil {
-	// 	log.Println("Error occured while getting user name: ", err)
+	// 	log.Println("Error occurred while getting user name: ", err)
 	// 	fmt.Println(w, "error getting name")
 	// 	return
 	// }
@@ -95,7 +95,7 @@ func ghAuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values[accessTokenKey] = tkn.AccessToken
 	err = session.Save(r, w)
 	if err != nil {
-		log.Println("Error occured while saving access token: ", err)
+		log.Println("Error occurred while saving access token: ", err)
 		renderTemplate(w, "error", "Something went wrong while handling your token. Please try again")
 	}
 
